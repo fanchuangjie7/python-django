@@ -1,0 +1,14 @@
+yum -y install git
+git clone 克隆的github地址
+填写git信息
+git config --global user.name " "
+git config --global user.email " "
+
+在克隆的地址目录下执行
+git init
+git add  test	需要上传的文件
+git commit -m "test01"   打标签
+git push -u origin master   上传至主节点
+
+git checkout 文件
+git pull 文件
