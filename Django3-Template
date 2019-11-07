@@ -1,0 +1,1166 @@
+django模板介绍
+`实际的页面大多是带有样式的HTML代码，这可以让浏览器渲染出非常漂亮的页面，目前市面上有
+非常多的模板系统，其中最知名最好用的就是DTL和Jinja2，DTL是Django Template Language
+三个单词的缩写，也就是Django自带的模板语言，当然也可以配置Django自带的模板语言，当然
+也可以配置Django支持Jinja2等其他模板引擎，但是作为Django内置的模板语言，和Django可以
+达到无缝衔接而不会产生一些不兼容的情况，因此建议使用DTL。
+
+	DTL与普通的HTML文件的区别:
+DTL模板是一种带有特殊语法的HTML文件，这个HTML文件可以被Django编译，也可以传递参数进去
+实现数据动态化。在编译完成后，生成一个普通的HTML文件，然后发送给客户端。
+
+	渲染模板:
+渲染模板有多种方式，以下是两种常用的方式。
+1、render_to_string:找到模板，然后将模板编译后渲染成python的字符串格式，最后再通过
+HttpResponse类包装成一个HttpResponse对象返回回去，比如：
+
+在终端创建一个项目:django-admin startproject test-project1
+cd 到test-project1
+创建一个app:python manage.py startapp front
+
+在templates创建html文件
+templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+	这个是从模板中渲染的字符串
+</body>
+</html>
+
+修改front/views.py文件
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+def index(request):
+	html = render_to_string("index.html")
+	return HttpResponse(html)
+
+修改test-project1/test-project1/urls.py
+from django.urls import path
+from front import views
+urlpatterns = [
+	path('',views.index),
+]
+然后运行此项目，可查看到效果。
+
+2、以上方式虽然已经很方便了，但是django还提供了一个更加简便的方式，直接将模板渲染
+字符串和包装成HttpResponse对象一步到位完成。比如:
+
+修改front/views.py文件
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+def index(request):        
+	return render(request,'index.html)
+
+	模板查找路径配置:
+在项目的settings.py文件中，有一个TEMPLATES配置，这个配置包含了模板引擎的配置，模板
+查找路径的配置，模板上下文的配置等，模板路径路径可以在两个地方配置。
+
+1、DIRS:这是一个列表，在这个列表中可以存放所有的模板路径，以后在视图中使用render或者
+render_to_string渲染模板的时候，会在这个列表的路径中查找模板。
+
+2、APP_DIRS:默认为True，这个设置为True后，会在INSTALLED_APPS的安装了的APP下的templates
+文件夹中查找模板。
+
+3、查找顺序：比如代码render('index.html'),先会在DIRS这个列表中一次查找路径下有没有这个
+模板，如果有，就返回。如果DIRS列表中所有的路径都没有找到，那么会先检查当前这个视图所处
+的app是否已经安装，如果已经安装了，那么就先在当前这个app下的templates文件夹中查找模板
+如果没有找到，那么会在其他已经安装了的app中查找，如果所有路径下都没有找到，那么会抛出
+一个TemplateDoesNotExist的异常。
+
+	DTL模板语法:
+变量:
+模板中可以包含变量，django在渲染模板的时候，可以传递变量对应的值过去进行替换，变量的
+命名规范和python非常类似，只能是阿拉伯数字和英文字符以及下划线的组合，不能出现标点符号
+等特殊字符，变量需要通过视图函数渲染，视图函数在使用render或者render_to_string的时候可
+以传递一个context的参数，这个参数是一个字典类型，以后在模板中的变量就从这个字典中读取
+值的，比如:
+
+在终端创建一个项目:django-admin startproject test-project2
+cd 到test-project2
+在test-project2/test-project2/下创建一个views.py文件
+
+import django.shortcuts import render
+	#class Person(object): #定义类方式
+	#def __init__(self,username):
+	#	self.username = username
+ 
+def index(request):
+	#p = Person("hello")
+	context = {
+		#'person':p
+		'username':'hello'
+	}
+	return render(request,'index.html',context=context)
+
+在tempaltes下新建一个index.html文件
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+	<--! {{ person.username}} -->
+	{{ username }}
+</body>
+</html>
+
+修改test-project2/test-project2/下的urls.py文件
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+	path('',views.index),
+]
+
+运行项目，访问127.0.0.0查看是否读取
+
+注意:
+1、在模板中使用变量，需要将变量放到{{ 变量 }}中。
+2、如果想要访问对象的属性，那么可以通过对象.属性名来进行访问。
+class Person(object):
+	def __init__(self,username):
+		self.username = username
+context = {
+	'person':p
+}
+以后想要访问person的username，那么就是通过person.username来访问。
+
+3、如果想要访问一个字典的key对应的value，那么只能通过字典.key的方式进行访问，
+不能通过中括号[]的形式进行访问。
+context = {
+	'person':{
+		'username':'hello'
+	}
+}
+那么以后在模板中访问username，就是以下代码person.username。
+
+4、因为在访问字典的key时候也是使用点.来访问，因此不能在字典本身就有的属性名
+当作key，否则字典的那个属性将编程字典中的key了。
+context = {
+	'person':{
+		'username':'hello',
+		'keys':'abc'
+	}
+}
+以上因为将keys作为person这个字典的key了，因此以后在模板中访问person.keys的时候，
+返回的不是这个字典的所有key，而是对应的值。
+
+5、如果想要访问列表或者元组，那么也是通过点.的方式进行访问，不能通过中括号[]的
+形式进行访问，这一点和python中是不一样的，比如:
+{{ persons }}
+
+	常用的模板标签
+	
+(1)、if标签使用详解:
+if标签相当于python中的if语句，有elif和else相对应，但是有的标签都需要
+标签符号({%%})进行包裹，if标签中可以使用==、!=、<、<=、>、>=、in、not in、is、is not
+等判断运算符，比如:
+{% if "hello" in persons %}
+	<p>hello</p>
+{% else %}
+	<p>world</p>
+{% endif %}
+
+在终端创建一个项目:django-admin startproject test-project3
+cd 到test-project3
+在test-project3/test-project3/下创建一个views.py文件
+
+from django.shortcuts import render
+def index(request):
+	context = {
+		'age':18
+	}
+	return render(request,'index.html')
+
+修改test-project3/test-project3/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+	path('',views.index),
+]
+
+在test-project3/templates/下创建index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+</head>
+<body>
+	{% if age < 18 %}
+		<p>条件不匹配，错误！</p>
+	{% elif age == 18 %}
+		<p>条件匹配成功！</p>
+	{% else %}
+		<p>条件匹配成功！显示页面</p>
+	{% endif %}
+</body>
+</html>
+注意：
+1、所有的标签都是在{%%}之间。
+2、if标签有闭合标签，就是{% endif %}
+3、if标签的判断运算符，就跟python中的判断运算是一样的。
+4、还可以使用elif以及else等标签。
+
+(2)、for...in...标签详解:
+for...in...类似于python中的for...in...可以遍历列表、元组、字符串、字典等一切可以
+遍历的对象。比如：
+{% for person in persons %}
+	<p>{{ person.name }}</p>
+{% endfor %}
+
+如果想要反向遍历，那么在遍历的时候就加上一个reversed,比如：
+{% for person in persons reversed %}
+	<p>{{ person.name }}</p>
+{% endfor %}
+
+遍历字典的时候，需要使用items、keys和values等方法。在DTL中，执行一个方法不能使用圆括号
+的形式，遍历字典代码如下：
+{% for key,value in person.items %}
+	<p>key:{{ key }}</p>
+	<p>value:{{ value }}</p>
+{% endfor %}
+
+在for循环中，DTL提供了一些变量可供使用，这些变量如下:
+forloop.counter:当前循环的下表，以1作为起始值。
+
+forloop.counter0:当前循环的下表，以0作为起始值。
+
+forloop.revcounter:当前循环的反向下标值，比如列表有5个元素，那么第一次遍历这个属性是等于
+5，第二次是四，以此类推，并且是以1作为最后一个元素的下标。
+
+forloop.revcounter0:类似于forloop.revcounter，不同的是最后一个元素的下标是从0开始。
+
+forloop.first:是否是第一次遍历。
+
+forloop.last:是否是最后一次遍历。
+
+forloop.parentloop:如果有多个循环嵌套，那么这个属性代表的是上一级的for循环。
+
+在终端创建一个项目:django-admin startproject test-for
+cd 到test-for
+在test-for/test-for/下创建一个views.py文件
+from django.shortcuts import render
+def index(request):
+ 	context = {
+		'books': [
+			'A',
+			'B',
+			'C',
+			'D'
+		]       
+	}
+        return render(request,'index.html',context=context)
+
+修改test-for/test-for/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index),
+]
+
+在test-for/templates/下创建index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+</head>
+<body>
+	<ul> #无序标签
+		{% for book in books %}
+			<li>{{ book }}</li>
+		{% endfor %}
+	</ul>
+</body>
+</html>
+运行项目 查看
+
+(3)、for...in...empty标签:
+这个标签使用跟for...in...一样的，只不过是在遍历的对象如果没有元素的情况下，
+会执行empty中的内容，比如:
+{% for person in persons %}
+	<li>{{ person }}</li>
+{% empty %}
+	暂时还没有评论
+{% endfor %}
+
+(4)、with标签:
+在模板中定义变量，有时候一个变量访问的时候比较复杂，那么可以先把这个复杂的变量缓存到一个变量上，以后就可以直接使用这个变量就可以了。比如:
+context = {
+	"persons":["张三","李四"]
+}
+
+{% with lisi=persons.1 %}
+	<p>{{ lisi }}<p>
+{% endwith %}
+
+eg:
+在终端创建一个项目:django-admin startproject test-with
+cd 到test-with
+在test-with/test-with/下创建一个views.py文件
+from django.shortcuts import render
+def index(request):
+ 	context = {
+		'persons': [
+			'张三',
+			'李四',
+			'王五'
+		]
+	}
+      
+        return render(request,'index.html',context=context)
+
+修改test-with/test-with/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index),
+]
+
+在test-with/templates/下创建index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+</head>
+<body>
+ 	# <p>{{ persons.0 }}</p>    这种方法比较麻烦
+
+-----------------或者-------------------------------
+ 
+	{% with zs = person.0 %}
+		<p>{{zs}}</p>
+	{% endwith %} 
+
+-----------------或者----------------------------
+	{% with persons.0 as zs %}
+		<p>{{zs}}</p>
+	{% endwith %}
+
+</body>
+</html>
+
+注意:
+1、在模板中，想要定义变量，可以通过with语句来实现。
+2、with语句有两种使用方式，第一种是with xx=xxx的形式，第二种是with xxx as xxx的形式。
+3、定义的变量只能在with语句块中使用，在with语句块外面使用取不到这个变量。
+
+(5)、url标签使用详解
+在模板中，我们经常要写一些url，比如某个a标签中需要定义href属性，当然如果通过硬编程
+的方式直接将这个url写死在里面也是可以的，但是这样对于以后项目维护可能不是一件好事，
+因此建议使用这种反转的方式来实现，类似于django中的reverse一样。比如:
+
+<a href="{% url 'book:list' %}">图书列表页面</a>
+
+如果url反转时需要传递参数，那么可以在后面传递，但是参数分位置参数和关键字参数，位置
+参数和关键字参数不能同时使用。比如:
+# path部分
+path('detail/<book_id>/',views.book_detail,name='detail')
+
+# url反转，使用位置参数
+<a href="{% url 'book:detail'1 %}">图书详情页面</a>
+
+# url反转，使用关键字参数
+<a href="{% url 'book:detail' book_id=1 %}">图书详情页面</a>
+
+如果想要在使用url标签反转时要传递查询字符串的参数，那么必须要手动在后面添加，比如:
+<a href="{% url 'book:detail'book_id=1 %}?page=1">图书详情页面</a>
+
+如果需要传递多个参数，那么通过空格的方式进行分隔。比如:
+<a href="{% url 'book:detail'book_id=1 page=2 %}>图书详情页面</a>
+
+eg:
+在终端创建一个项目:django-admin startproject test-url
+cd 到test-url
+在test-url/test-url/下创建一个views.py文件
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def index(request):
+        return render(request,'index.html')
+
+def login(request):
+	next = request.GET.get('next')
+	text = '登录页面，登录完成后要跳转的url是: %s' % next
+	return HttpResponse("text")
+
+def book(request):
+	return HttpResponse("读书页面")
+
+def book_detail(request,book_id,category):
+	text = "图书id是: %s 分类是: %s" % (book_id,category)
+	return HttpResponse(text)
+
+def movie(request):
+	return HttpResponse("电影页面")
+
+def city(request):
+	return HttpResponse("同城页面")
+
+修改test-url/test-url/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index,name='index'),
+	path('book/',views.book,name='book'),
+	path('movie/',views.movle,name='movie'),
+	path('city/',views.city,name='city'),
+	path('book/book_detail/<book_id>/<category>/',views.book_detail,name='detail')
+	path('login/',views.login,name='login')
+]
+
+在test-url/templates/下创建index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+	<style>
+		.nav{
+			overfolw: hidden;
+		}
+		.nav li{
+			float: left;
+			list-style: none; //去掉列表顺序
+			margin: 0 20px;	//外边距
+		}
+	</style>
+	
+</head>
+<body>
+	<ul class="nav">
+		<li><a href="{% url 'index' %}">首页</a></li>
+		<li><a href="{% url 'book' %}">读书</a></li>
+		<li><a href="{% url 'movie' %}">电影</a></li>
+		<li><a href="{% url 'city' %}">同城</a></li>
+		<li><a href="{% url 'detail' book_id='1' category=1 %}">最火的一本书</a></li>
+		<li><a href="{% url 'login' %}?next=/">登录</a></li>
+	</ul>       
+</body>
+</html>
+运行项目，测试
+
+（6）spaceless标签:
+移除html标签中的空白字符，包含空格、tab键、换行等。比如:
+{% spaceless %}
+	<p>
+		<a href="foo/">Foo</a>
+	</p>
+{% endspaceless %}
+
+那么在渲染完成后，会变成以下的代码：
+	<p><a href="foo/">Foo</a></p>
+
+spaceless只会移除html标签之间的空白字符，而不会移除标签与文本之间的空白字符，不如:
+{% spaceless %}
+	<strong>
+		Hello
+	</strong>
+{% endspaceless %}
+这个将不会移除strong中的空白字符。
+
+
+（7）autoescape自动转义标签:
+开启和关闭这个标签内元素的自动转义功能，自动转义是可以将一些特殊的字符，比如 < 转义成
+html语法能识别的字符，比如: < 会被转义成 &lt;，而 > 会被自动转义成 &gt;。模板中默认是
+已经开启了自动转义的，autoescape的示例代码如下:
+
+eg:
+在终端创建一个项目:django-admin startproject test-autoescape
+cd 到test-autoescape
+
+在test-autoescape/templates创建html文件
+templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+</head>
+<body>
+	{% autoescape off %}	//关闭自动转义
+		{{ info }}	
+	{% endautoescape %}
+ 	{{ info }} // 转义成了字符串，而不是超链接
+	<a href='www.baidu.com'>百度</a>   // 这个是没有被转义的超链接
+</body>
+</html>
+
+修改test-autoescape/test-autoescape/views.py文件
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def index(request):
+        context = {
+		'info':"<a href='www.baidu.com'>百度</a>"
+	}
+        return render(request,'index.html',context=context)
+
+修改test-autoescape/test-autoescape/urls.py
+from django.urls import path
+from front import views
+urlpatterns = [
+        path('',views.index),
+]
+
+运行项目，测试。
+
+注意:
+1、DTL中默认已经开启了自动转义，会将那些特殊字符进行转义，比如会将 < 转义成 &lt;等。
+2、如果你不知道自己在干什么，那么最好是使用DTL的自动转义，这样网站才不容易出现XSS漏洞。
+3、如果变量确实是可信任的，那么可以使用autoescape标签来关掉自动转义。
+
+
+（8）、verbatim标签:
+默认在DTL模板中是会去解析那些特殊字符的，比如{% 和 %}以及{{ 等。如果在某个代码片段中不想
+使用DTL的解析引擎，那么你可以把这个代码片段放在verbatim标签中，比如:
+{% verbatim %}
+	{{if dying}}Still alive.
+{{/if}}
+{% endverbatim %}
+
+
+eg:
+在终端创建一个项目:django-admin startproject verbatim
+cd 到test-verbatim
+
+在test-verbatim/templates创建html文件
+templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+</head>
+<body>
+	{% verbatim %}
+		{{ hello }}
+	{% endverbatim %}
+</body>
+</html>
+
+修改test-verbatim/test-verbaim/views.py文件
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def index(request):
+        
+        return render(request,'index.html')
+
+修改test-verbatim/test-verbatim/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index),
+]
+
+运行项目，测试。不会解析变量，直接输出。
+
+（9）、更多标签可参考官方文档:
+https://docs.djangoproject.com/en/2.0/ref/templates/builtins/
+
+	DTL常用的过滤器
+在模板中，有时候需要对一些数据进行处理以后才能使用，一般在python中我们是通过函数的
+形式来完成的，而在模板中，则是通过过滤器来实现的，过滤器使用的是 | 来使用。
+比如使用add过滤器，代码如下:
+{{ value|add:"2" }}
+
+在开发中常用的过滤器:
+1、add
+将传进来的参数添加到原来的值上面，这个过滤器会尝试将值和参数转换成整型然后进行相加，
+如果转换成整形过程中失败了，那么会将值和参数进行拼接，如果是字符串，那么会拼接成字符串，
+如果是列表，那么会拼接成一个列表，代码如下:
+{{ value|add:"2" }}
+
+如果value是等于4，那么结果将是6，如果value是等于一个普通的字符串，比如abc,那么结果将是
+abc2，add过滤器的源代码如下:
+
+def add(value,arg):
+	"""Add the arg to the value."""
+	try:
+		return int(value) + int(arg)
+	except(ValueError,TypeError):
+		try:
+			return value + arg
+		except Exxeption:
+			return ''
+
+
+eg:
+在终端创建一个项目:django-admin startproject test-filter 所有过滤器的示例代码都放在
+这个项目里。
+cd 到test-filter
+
+在test-filter/templates创建html文件
+templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>add过滤器</title>
+</head>
+<body>
+ 	{{ value1|add:value2 }}       
+</body>
+</html>
+
+修改test-filter/test-filter/views.py文件
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def index(request):
+	context = {
+		'value1':['1','2'],
+		'value2':['3','5']
+	}
+        return render(request,'index.html',context=context)
+
+修改test-filter/test-filter/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index),
+]
+
+运行项目，测试。结果是['1','2','3','5']
+
+2、cut过滤器
+移除值中所有指定的字符串，类似于python中的replace(args,""),代码如下:
+{{ vaule|cut:" " }}
+
+以上示例将会移除value中所有的空格字符，cut过滤器的源代码如下:
+def cut(value,arg):
+	"""Remove all values of arg from the given string."""
+	safe = isinstance(value,SafeData)
+	value = value.replace(arg,'')
+	if safe and arg !=';':
+		return mark_safe(value)
+	return value
+
+eg:
+在test-filter/templates创建html文件
+templates/cut.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>cut过滤器</title>
+</head>
+<body>
+       {{ "hello world" }}
+</body>
+</html>
+
+修改test-filter/test-filter/views.py文件        
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def cut(request):
+        
+        return render(request,'cut.html',context=context)
+
+修改test-filter/test-filter/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+        path('',views.index),
+	path('cut/',views.cut),
+]
+
+运行项目，测试结果是:helloworld
+
+3、date过滤器
+将一个日期按照指定的格式，格式化成字符串，示例代码如下:
+#views.py
+context = {
+	"birthday":datetime.now()
+}
+
+#html文件
+{{ birthday|date:"Y/m/d" }}
+
+那么将会输出2019/10/23,其中Y代表的是四位数字的年份，m代表的是两位数字的月份，
+d代表的是两位数字的日期，
+还有更多时间格式化的方式如下:
+
+格式化字符	描述			示例
+  Y	     四位数字的年份    		2019
+  m	     两位数字的月份		01-12
+  n	     月份，1-9前面没有0的前缀	1-12
+  d	     两位数字的天		01-31
+  j	     天，1-9前面没有0的前缀	1-31
+
+	     小时，12小时格式的，	1-12
+  g	     1-9前面没有0的前缀		
+
+  h	     小时，12小时格式的，	01-12
+	     1-9前面有0的前缀		
+
+  G	     小时，24小时格式的，	1-23
+	     1-9前面没有0的前缀		
+ 
+  H	     小时，24小时格式的，	01-23
+	     1-9前面有0的前缀。		
+
+  i	     分钟，1-9前面有0的		00-59
+	     前缀。			
+
+  s	     秒，1-9前面有0的前缀	00-59
+
+
+4、default过滤器
+如果值被评估为false，比如[]，"",None,{}等这些在if判断中为false的值，都会使用default
+过滤器提供的默认值，示例代码如下:
+{{ value|default:"nothing" }}
+
+如果value 是等于一个空的字符串，比如""，那么以上代码将会输出nothing。
+
+5、default_if_none
+如果值是none,那么将会使用default_if_none提供的默认值，这个和default有区别，default是
+所有被评估为false的都会使用默认值。而default_if_none则只有这个值是等于none的时候才会使用
+默认值，示例代码如下:
+{{ value|default_if_none:"nothing" }}
+
+如果value是等于""也即空字符串，那么以上会输出空字符串，如果value是一个none值，
+以上代码才会输出nothing。
+
+6、first过滤器
+返回列表/元组/字符串的第一个元素，示例代码如下:
+{{ value|first }}
+
+如果value是等于['a','b','c']，那么输出将会是a。
+
+7、last过滤器
+返回列表/元组/字符串中的最后一个元素，示例代码如下:
+{{ value|last }}
+如果value是等于['a',b','c'],那么输出将会是c
+
+8、floatformat
+使用四舍五入的方式格式化一个浮点类型，如果这个过滤器没有传递任何参数，那么只会在小数点
+后保留一个小数，如果小数后面全是0，那么只会保留整数。当然也可以传递一个参数，标识具体
+要保留几个小数。
+1.如果没有传递参数:
+| value | 模版代码 | 输出 | | --- | --- | --- | | 34.23234 | {{ value\|floatformat }} | 34.2 | | 34.000 | {{ value\|floatformat }} | 34 | | 34.260 | {{ value\|floatformat }} | 34.3 |
+
+2.如果传递参数:
+| value | 模版代码 | 输出 | | --- | --- | --- | | 34.23234 | {{value\|floatformat:3}} | 34.232 | | 34.0000 | {{value\|floatformat:3}} | 34.000 | | 34.26000 | {{value\|floatformat:3}} | 34.260 |
+
+9、join过滤器
+类似于python中的join，将列表/元组/字符串用指定的字符进行拼接，示例代码如下:
+{{ value|join:"/" }}
+
+如果value是等于['a','b','c'],那么以上代码将输出a/b/c.
+
+10、length过滤器
+获取一个列表/元组/字符串/字典的长度。示例代码如下:
+{{ value|length }}
+
+如果value是等于['a','b','c'],那么以上代码将输出3，如果value为none，那么以上将返回0.
+
+11、lower过滤器
+将值中所有的字符全部转换成小写，示例代码如下:
+{{ value|lower }}
+
+如果value是等于hello world，那么以上代码将输出hello world
+
+12、upper过滤器
+类似于lower，只不过是将指定的字符串全部转换成大写。
+
+13、random过滤器
+在被给的列表/字符串/元组中随机的选择一个值。示例代码如下：
+{{ value|random }}
+
+如果value是等于['a','b','c']，那么以上代码会在列表中随机选择一个。
+
+14、safe过滤器
+标记一个字符串是安全的，也即会关掉这个字符串的自动转义，示例代码如下:
+{{ value|safe }}
+
+如果value是一个不包含任何特殊字符的字符串，比如<a>这种，那么以上代码就会把字符串
+正常的输入，如果value是一串html代码，那么以上代码将会吧这个html代码渲染到浏览器中。
+
+15、slice过滤器
+类似于python中的切片操作，示例代码如下:
+{{ some_list|slice:"2:" }}
+
+以上代码将会给some_list从2开始做切片操作。
+
+
+16、stringtags过滤器
+删除字符串中所有的html标签，示例代码如下：
+{{ value|striptags }}
+
+如果value是<strong>hello world</strong>,那么以上代码将会输出hello world
+
+17、truncatechars过滤器
+如果给定的字符串长度超过了过滤器指定的长度，那么就会进行切割，并且会拼接三个点来作为
+省略号，示例代码如下:
+{{ value|truncatechars:5 }}
+
+如果value是等于北京欢迎您~,那么输出的结果是北京... 可能你会想，为什么不是北京欢迎您...
+因为三个点也占了三个字符，所有北京+三个点的字符长度就是5。
+
+18、truncatechars_html过滤器
+类似于truncatechars，只不过是不会切割html标签，示例代码如下:
+{{ value|truncatechars:5 }}
+
+如果value是等于<p>北京欢迎您~</p>，那么输出将是<p>北京...</p>。
+
+	自定义模板过滤器
+虽然DTL给我们内置了许多过滤器，但是有时候还是不能满足需求，因此django提供了一个接口，可以
+自定义过滤器，实现自己的需求。
+模板过滤器必须要放在app中，并且这个app必须要在INSTALLED_APPS中进行安装，然后再在这个app下
+面创建一个Python包叫做teplatetags,再在这个包下面创建一个python文件，比如app的名字叫做book,
+那么项目结构如下:
+- book
+   - views.py
+   - urls.py
+   - models.py
+   - templatetags
+       - my_filter.py
+
+在创建了存储过滤器的文件后，接下来就是在这个文件中写过滤器了，过滤器实际上就是python中的
+一个函数，只不过是把这个函数注册到模板库中，以后在模板中就可以使用这个函数了，但是这个函
+数的参数有限制，第一个参数必须是这个过滤器需要处理的值，第二个参数可有可无，如果有，那么
+就意味着在模板中可以传递参数，并且过滤器的函数最多只能有两个参数。在写完过滤器后，再使用
+django.template.Library对象注册进去，示例代码如下:
+
+from dajngo import template
+
+#创建模板库对象
+register = template.Library()
+
+#过滤器函数
+def mycut(value,mystr):
+	return value.replace(mystr)
+
+#将函数注册到模板库中
+register.filter(""mycut",mycut)
+
+以后想要模板中使用这个过滤器，就要在模板中load一下这个过滤器所在的模块的名字（也就是这个
+python文件的名字），示例代码如下:
+{% load my_filter %}
+
+自定义时间计算过滤器:
+有时候经常会在朋友圈、微博中可以看到一条信息发表的时间，并不是具体的时间，而是距离现在多久
+比如刚刚，1分钟前等，这个功能DTL是没有内置这样的过滤器的，因此我们可以自定义一个这个的过滤器
+	"""
+	time距离现在的时间间隔
+	1、如果时间间隔小于1分钟以内，那么就显示刚刚
+	2、如果是大于1分钟小于1小时，那么就显示xx分钟前
+	3、如果是大于1小时小于24小时，那么就显示xx小时前
+	4、如果是大于24小时小于30天以内，那么就显示xx天前
+	5、否则就是显示具体的时间2017/10/20 16:15
+	"""
+
+为了更加方便的将函数注册到模板库中当作过滤器，也可以使用装饰器来将一个函数包装成过滤器，
+示例代码如下:
+from django import template
+register = template.Library()	//注册到模板库当作过滤器
+@register.filter(name='mycut')
+def mycut(value,mystr):
+	return value.replace(mystr,"")
+
+eg:
+在终端创建一个项目:django-admin startproject test-timefilter
+cd 到test-timefilter
+在终端中创建一个app名字my-timefilter:manage.py startapp my-filter
+在my-filter app中创建一个名为templatetags的python包，
+在templatetags python包中编写my-filter.py文件
+
+# templatetages/my-filter.py
+# encoding: utf-8
+from django import template
+from datetime import datetime
+
+register = template.Library()
+
+@register.filter
+def time_since(value): //使用函数名作为过滤器名
+	if not isinstance(value,datetime): //判断value值是否为datetime类型
+		return value //如果不是datetime类型 不做以下事情 直接返回value值
+	now = datetime.now()	//获取当前时间
+	timestamp = (now - value).total_seconds()
+	if timestamp < 60:
+		return '刚刚'
+	elif timestamp >= 60 and timestamp < 60*60:
+		minutes = int(timetamp/60)
+		return '%s分钟前' % minutes
+	elif timestamp >= 60*60 and timestamp < 60*60*24:
+		hours = int(timestamp/60/60)
+		return '%s小时前' % hours
+	elif timestamp >= 60*60*24 and timestamp < 60*60*24*30:
+		days = int(timestamp/60/60/24)
+		return '%s天前' % days
+	else:
+		return value.strftime("%Y-%m-%d %H:%M)
+
+在test_timefilter/test_timefliter/templates/中创建html文件
+templates/index.html
+{% load my-filter %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>自定义时间过滤器</title>
+</head>
+<body>
+	{{ mytime|time_since }}
+</body>
+</html>
+
+#修改views.py文件
+from django.shortcuts import render
+from datetime import datetime
+
+def index(request):
+	context = {
+		'mytime':datetime(year=2019,month=3,day=8,hour=18,minute=0,second-=0) //年月日时分秒
+	}
+	return render(request,'index.html',context=context)
+
+#把过滤器所在的这个app添加到settings.INSTALLED_APS中
+#test_project/test_project/settings.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'test_app',
+]
+
+#修改urls.py文件
+#test_project/urls.py
+
+from django.contrib import admin
+from django.urls import path
+from test_app import views
+
+urlpatterns = [
+   #path('admin/', admin.site.urls),
+    path('',views.index),
+]
+
+自定义过滤器总结:
+1、首先在某个app中，创建一个python包叫做templatetages,注意，这个包的名字必须为templatetags,
+不然就找不到。
+
+2、在这个templatetags包下面,创建一个python文件用来存储过滤器。
+
+3、在新建的python文件中，定义过滤器（也就是函数）,这个函数的第一个参数永远是被过滤的那个值，
+并且如果在使用过滤器的时候传递参数，那么还可以定义另外一个参数，但是过滤器最多只能有2个参数。
+
+4、在写完过滤器（函数）后，要使用django.template.Library.filter进行注册。
+
+5、还要把这个过滤器所在的这个app添加到settings.INSTALLED_APS中，不然django也找不到这个过滤器。
+
+6、在模板中使用load标签加载过滤器所在的python包。
+
+7、可以使用过滤器了
+
+8、django.template.Library.filter还可以当作装饰器来使用，如果filter函数没有传递任何参数，那么
+将会使用这个函数的名字来作为过滤器的名字，当然如果你不想使用函数的名字来作为过滤器的名字，也可
+以传递一个name参数，实例代码如下:
+#views.py
+@register.filter('my_greet')
+def greet(value,word):
+	return value + word
+
+
+########模板结构优化
+引入模板:
+有时候一些代码是在许多模板中都用到的，如果我们每次都重复的去拷贝代码那肯定不符合项目的规范，
+一般我们可以把这些重复性的代码抽取出来，就类似于python中的函数一样，以后想要使用这些的时候，
+就通过include包含进来，这个标签就是include，实例代码如下:
+#header.html
+<p>我是header</p>
+
+#footer.html
+<p>我是footer</p>
+
+#main.html
+{% include 'header.html' %}
+<p>我是main函数</p>
+{% include 'footer.html' %}
+
+include标签寻找路径的方式，也是跟render渲染模板的函数是一样的。
+默认include标签包含模板，会自动的使用主模板中的上下文，也即可以自动的使用主模板中的变量，如果
+想传入一些其他的参数，那么可以使用with语句。实例代码如下:
+#header.html
+<p>用户名:{{username}}</p>
+
+#main.html
+{%include "header.html"with username='json'%}
+
+模板继承:
+在前端页面开发中，有些代码是需要重复使用的，这种情况可以使用include标签来实现，也可以使用另外
+一个比较强大的方式来实现，那就是模板继承，模板继承类似于python中的类，在父类可以先定义好一些变
+量和方法，然后在子类中实现，模板继承也可以在父模板中先定义好一些子模板需要用到的代码，然后子
+模板直接继承就可以了，并且因为子模板肯定有自己的不同代码，因此可以在父模板中定义一个block接口，
+然后子模板再去实现。
+
+
+eg:
+创建一个项目名为test_base,在项目的基础下创建名为baseapp的app:python manage.py baseapp
+在test_base/templates/下创建父html文件和子html文件。
+#base.html 父模板
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>父模板</title>
+</head>
+<body>
+<header>
+	<ul>
+		<li><a href="/">首页</a></li>
+		<li><a href="{% url 'company' %}">公司</a></li> //url反转
+		<li><a href="{% url 'school' %}">校园</a></li>  //url反转
+		<li>{{ username }}</li>
+	</ul>
+</header>
+<div class="context">
+	{% block context %} //给子模板的代码开个block接口，显示子模板自己的代码
+		我是父模板的代码 //此时子模板并不能直接显示父模板的代码，子模板需要
+				 //使用{{ block.super }}标签才能显示父模板的代码。
+	{% endblock %}
+</div>
+<footer>
+	这是footer部分
+</footer>
+</body>
+</html>
+
+——————————————————————————————————————
+#index.html  子模板 使用标签来继承父模板的东西
+{% extends 'base.html' %}
+
+{% block context %}
+	这是首页的代码
+	<p> {{block.super}} </p>  //此时子模板就会显示父模板的代码了
+{% endblock %}
+
+——————————————————————————————————————
+修改test_base/baseapp/下的views.py文件
+#views.py
+from django.shortcuts import render
+
+def index(request):
+	context = {		//给username传递一个参数，父模板可以直接使用
+		'username':'调用'
+	}		
+	return render(request,'index.html',context=context)
+
+def company(request):
+	pass
+
+def school(request):
+	pass
+
+在test_base/test_base/views.py文件中做映射。
+#views.py
+from django.urls import path
+from baseapp import views
+
+urlpatterns = [
+	path('',views.index,name='index'), //给url反转取个名字
+	path('company/',views.company,name='company'),
+	path('school/',views.school,name='school),
+]
+——————————————————————————————————————
+
+加载静态文件:
+在一个网页中，不仅仅只有一个html骨架，还需要css样式文件，js执行文件以及一些图片等，
+因此在DTL中加载静态文件是一个必须要解决的问题，在DTL中，使用static标签文件，要使用
+static标签，首先需要{% load static %},加载静态文件的步骤如下:
+1、首先确保 django.contrib.staticfiles 已经添加到settings.INSTALLED_APPS中。
+
+2、确保settings.py中设置了STAIC_URL。
+
+3、在已经安装了的app下创建一个文件叫做static，然后再在这个static文件夹下创建一个当前
+app的名字的文件夹，再把静态文件放到这个文件夹下，例如你的app叫做book,有一个静态文件
+叫做fanly.jpg,那么路径为 book/static/book/fanly.jpg。
+
+** 为什么在app下创建一个static文件夹，还需要在这个static下创建一个同app名字的文件夹呢？**
+原因是：如果直接把静态文件放在static文件夹下，那么在模板加载静态文件的时候就是使用fanly.jpg，
+如果在多个 app 之间有同名的app文件夹，这时候可能就会产生混淆，而在static文件夹下加了一个同名
+app文件夹，在模板中加载的时候就是使用app/fanly.jpg，这样就可以避免产生混淆。
+
+4、如果有一些静态文件是不和任何app挂钩的，那么可以在settings.py中添加STATICFILES_DIRS,以后
+DTL就会在这个列表的路径中查找静态文件，不如可以设置为:
+STATICFILES_SIRS=[
+	os.path.join(BASE_DIR,"static")
+]
+
+5、在模板中使用load标签加载static标签,比如要加载在项目的static文件夹下的style.css的文件，
+那么实例代码如下：
+{% load static %}
+	<link rel="stylesheet" href="{% static 'style.css' %}
+
+6、如果不想每次在模板中加载静态文件都是用load加载static标签，那么可以在settings.py中的
+TEMPLATES/OPTIONS 添加 'builtins':['django.templatetags.static']，这样以后在模板中就可以
+直接使用static标签，而不用手动的load了。
+
+7、如果没有settings.INSTALLED_APPS中添加django.contrib.staticfiles.那么我们就需要手动的
+将请求静态文件的url与静态文件的路径进行映射了，示例代码如下:
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+	#其他的url映射
+]+static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
+
+
+eg:
+创建一个项目名为test_static,在项目的基础下创建名为test_front的app:python manage.py test_front
+
+#test_static/test_static/urls.py
+from django.urls import path
+from front import views
+urlpatterns = [
+	path("",views.index),
+]
+
+#test_static/test_front/views.py
+from django.shortcuts import render
+
+def index(request):
+	return render(request,'index.html')
+
+#test_static/templates/index.html
+{% load static %}	//加载静态文件
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>static</title>
+</head>
+<body>
+<img src="{% static 'logo.jpg %}" alt="">
+</body>
+</html>
+
+把创建的app加到settings.py INSTALLED_APPS中
+# settings.py
+INSTALLED_APPS =[
+	...
+	...
+	'front' 
+]
+
+在test_static/创建一个static文件夹，这个文件夹是存放静态文件的，
+# test_static/static/logo.jpg
+
