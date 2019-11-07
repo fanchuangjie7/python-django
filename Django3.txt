@@ -1027,8 +1027,8 @@ eg:
 <header>
 	<ul>
 		<li><a href="/">首页</a></li>
-		<li><a href="/">"{% url 'company' %}"</a>公司</li> //url反转
-		<li><a href="/">"{% url 'school' %}"</a>校园</li>  //url反转
+		<li><a href="{% url 'company' %}">公司</a></li> //url反转
+		<li><a href="{% url 'school' %}">校园</a></li>  //url反转
 		<li>{{ username }}</li>
 	</ul>
 </header>
@@ -1059,7 +1059,10 @@ eg:
 from django.shortcuts import render
 
 def index(request):
-	return render(request,'index.html')
+	context = {		//给username传递一个参数，父模板可以直接使用
+		'username':'调用'
+	}		
+	return render(request,'index.html',context=context)
 
 def company(request):
 	pass
@@ -1095,3 +1098,69 @@ app的名字的文件夹，再把静态文件放到这个文件夹下，例如�
 原因是：如果直接把静态文件放在static文件夹下，那么在模板加载静态文件的时候就是使用fanly.jpg，
 如果在多个 app 之间有同名的app文件夹，这时候可能就会产生混淆，而在static文件夹下加了一个同名
 app文件夹，在模板中加载的时候就是使用app/fanly.jpg，这样就可以避免产生混淆。
+
+4、如果有一些静态文件是不和任何app挂钩的，那么可以在settings.py中添加STATICFILES_DIRS,以后
+DTL就会在这个列表的路径中查找静态文件，不如可以设置为:
+STATICFILES_SIRS=[
+	os.path.join(BASE_DIR,"static")
+]
+
+5、在模板中使用load标签加载static标签,比如要加载在项目的static文件夹下的style.css的文件，
+那么实例代码如下：
+{% load static %}
+	<link rel="stylesheet" href="{% static 'style.css' %}
+
+6、如果不想每次在模板中加载静态文件都是用load加载static标签，那么可以在settings.py中的
+TEMPLATES/OPTIONS 添加 'builtins':['django.templatetags.static']，这样以后在模板中就可以
+直接使用static标签，而不用手动的load了。
+
+7、如果没有settings.INSTALLED_APPS中添加django.contrib.staticfiles.那么我们就需要手动的
+将请求静态文件的url与静态文件的路径进行映射了，示例代码如下:
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+	#其他的url映射
+]+static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
+
+
+eg:
+创建一个项目名为test_static,在项目的基础下创建名为test_front的app:python manage.py test_front
+
+#test_static/test_static/urls.py
+from django.urls import path
+from front import views
+urlpatterns = [
+	path("",views.index),
+]
+
+#test_static/test_front/views.py
+from django.shortcuts import render
+
+def index(request):
+	return render(request,'index.html')
+
+#test_static/templates/index.html
+{% load static %}	//加载静态文件
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>static</title>
+</head>
+<body>
+<img src="{% static 'logo.jpg %}" alt="">
+</body>
+</html>
+
+把创建的app加到settings.py INSTALLED_APPS中
+# settings.py
+INSTALLED_APPS =[
+	...
+	...
+	'front' 
+]
+
+在test_static/创建一个static文件夹，这个文件夹是存放静态文件的，
+# test_static/static/logo.jpg
+
