@@ -1,0 +1,611 @@
+（一）安装python3
+
+1、安装依赖包 yum install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev 
+	libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev 
+	liblzma-dev python-openssl
+
+2、下载python3安装包
+wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tgz
+
+3、创建安装目录并解压到此目录
+mkdir -p /usr/local/python3
+tar zxvf Python-3.6.5.tgz -C /usr/local/python3
+
+4、进入解压后的目录进行编译安装
+./configure --prefix=/usr/local/python3   #此目录为安装目录
+
+执行完后configure命令后，会生成一个Makefile文件，这个文件主要是被下一步的make命令所使用
+（linux需要按照Makefile所指定的顺序来构建（build）程序组件）。
+
+5、执行make(make实际就是编译源代码，并生成执行文件)和make install
+make && make install
+(make install 实际上是把生成的执行文件拷贝到之前configure命令指定的目录/usr/local/python3下)
+
+6、建立python3软连接
+ln -s /usr/local/python3/bin/python3 /usr/bin/python3
+
+7、配置环境，将/usr/local/python3/bin加入PATH
+vim /etc/profile
+在文件末尾添加
+export PATH=$PATH:/usr/local/python3/bin
+保存退出
+source /etc/profile #更新此配置文件
+
+8、测试是否安装成功
+python3 -V
+pip3 -V 
+若pip3 -V 找不到，可以尝试创建pip3软连接
+ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
+
+（二）安装Django
+
+1、安装setuptools
+yum install python-setuptools
+安装完成后就可以使用easy_install命令安装django
+
+2、使用easy_install安装django
+easy_install django
+
+3、测试是否安装成功
+python3
+......
+>>>import django
+>>>django.VERSION
+(1,6,5,'final',0)
+>>>
+成功！
+
+（二^^一）使用pip3安装django(若还未安装pip3工具，以下是安装步骤)
+1、
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py   # 安装脚本
+python3 get-pip.py  # 使用python3运行脚本
+注：用那个版本的python运行安装脚本，pip就被关联到哪个版本。
+
+2、安装django
+pip3 install Django==1.9
+
+（二^^二）源码包装方法
+下载源码包：https://www.djangoproject.com/download/
+
+输入以下命令并安装：
+tar xzvf Django-X.Y.tar.gz    # 解压下载包
+cd Django-X.Y                 # 进入 Django 目录
+python3 setup.py install       # 执行安装命令
+安装成功后 Django 位于 Python3 安装目录的 site-packages 目录下。
+
+（三）python和django安装完就可以开始创建项目了
+1、使用django-admin创建项目
+此命令在/usr/local/python3/bin/下
+django-admin startproject test
+
+2、创建完成后可以看下项目的目录结构
+cd test/
+tree
+.
+|-- test
+|    |-- __init__.py
+|    |-- settings.py
+|    |-- urls.py
+|    `-- wsgi.py
+`-- manage.py
+
+目录说明
+test------>项目的容器
+manage.py------->一个实用的命令行工具，可以让你以各种方式与该django项目进行交互
+test/__init__.py------->一个空文件，告诉python该目录是一个python包
+test/settings.py------->该django项目的设置/配置
+test/urls.py------->该django项目的URL声明；一份由django驱动的网站“目录”
+test/wsgi.py------->一个WSGI兼容的WBE服务器的入口，以便运行你的项目
+
+3、进入test项目目录执行以下命令，启动服务器
+python3 manage.py runserver 0.0.0.0:8000
+0.0.0.0 允许所有连接此服务器，8000为端口号，若不指定说明则默认使用8000
+
+4、测试
+http://localhost:8000
+
+（四）自定义网页页面
+1、配置视图和URL
+在test/test/下创建views.py视图
+test/test/views.py
+from django.http import HttpResponse
+
+def hello(request):
+      return HttpResponse("Hello")
+
+绑定URL与视图函数，打开urls.py文件添加
+from django.conf.urls import url
+from . import views
+
+urlpatterns = [
+      url(r'^$',views.hello),
+]
+
+2、重启django服务器,测试
+python3 manage.py runserver 0.0.0.0:8080
+http://localhost:8080
+
+3、第二种方式修改urls.py文件规则
+from django.urls import path
+from . import views
+
+urlpatterns = [
+       path('hello/',views.hello),
+]
+重启django服务器,测试
+python3 manage.py runserver 0.0.0.0:8080
+http://localhost:8080/hello
+
+注：使用 django.http.HttpResponse() 来输出 "Hello World！"。
+该方式将数据与视图混合在一起，不符合 Django 的 MVC 思想。
+
+下面详细介绍 Django 模板的应用，模板是一个文本，用于分离文档的表现形式和内容。
+（五）自定义页面之django模板
+
+1、在test目录下创建templates目录并创建hello.html文件。
+mkdir -p test02/templates && touch hello.html
+echo "<h1>{{ hellos }}</h1> #模板中的变量使用了双括号，需要向django说明模板文件的路径。
+
+2、修改test/test/setting.py 修改TEMPLATES中的DIRS为[BASE_DIR+"/templates",],
+...TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR+"/templates",],       # 修改位置
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+...
+
+3、修改views.py 增加一个新的对象，用于向模板提交数据：
+test/test/views.py
+from django.http import HttpResponse
+# HttpResponse()来输出 "Hello!"
+# 该方式将数据与视图混合在一起，不符合 Django 的 MVC 思想
+
+from django.shortcuts import render
+
+def hello(request):
+    return HttpResponse("Hello!")
+
+def hellos(request):	#增加的内容
+    context = {}	#增加的内容
+    context['hellos'] = 'hello crazy!'	#增加的内容
+    return render(request,'hello.html',context)	#增加的内容
+
+这里使用render来替代之前使用的HttpResponse,render还使用了一个字典context作为参数
+context字典中元素的键值“hellos”对应了模板中的变量“{{ hellos }}"
+
+4、修改test/test/urls.py
+from django.conf.urls import include, url
+from django.contrib import admin
+from . import views
+
+urlpatterns = [
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^$', views.hello),
+    url(r'hellos/',views.hellos)， 	# 添加的内容
+    
+]
+这样就完成了使用模板来输出数据，从而实现数据与视图分离。
+5、测试
+访问 http://localhost:8080页面为：hello!
+访问 http://localhost:8080/hellos页面为：hello crazy!
+
+（六）模板中常用的语法规则之django模板标签
+
+if/else标签
+基本语法如下：
+{% if condition %}
+        ... display
+{% endif %}
+
+或者
+
+{% if condition1 %}
+     ... display 1
+{% elif condition2 %}
+     ... display 2
+{% else %}
+     ... display 3
+{% endif %}
+
+根据条件判断是否输出。if/else 支持嵌套。
+
+{% if %} 标签接受 and ， or 或者 not 关键字来对多个变量做判断 ，或者对变量取反（ not )，例如：
+
+{% if athlete_list and coach_list %}
+     athletes 和 coaches 变量都是可用的。
+{% endif %}
+for 标签
+{% for %} 允许我们在一个序列上迭代。
+
+与Python的 for 语句的情形类似，循环语法是 for X in Y ，Y是要迭代的序列而X是在每一个特定的循环中使用的变量名称。
+
+每一次循环中，模板系统会渲染在 {% for %} 和 {% endfor %} 之间的所有内容。
+
+例如，给定一个运动员列表 athlete_list 变量，我们可以使用下面的代码来显示这个列表：
+<ul>
+{% for athlete in athlete_list %}
+    <li>{{ athlete.name }}</li>
+{% endfor %}
+</ul>
+给标签增加一个 reversed 使得该列表被反向迭代：
+
+{% for athlete in athlete_list reversed %}
+...
+{% endfor %}
+可以嵌套使用 {% for %} 标签：
+
+{% for athlete in athlete_list %}
+    <h1>{{ athlete.name }}</h1>
+    <ul>
+    {% for sport in athlete.sports_played %}
+        <li>{{ sport }}</li>
+    {% endfor %}
+    </ul>
+{% endfor %}
+
+ifequal/ifnotequal 标签
+{% ifequal %} 标签比较两个值，当他们相等时，显示在 {% ifequal %} 和 {% endifequal %} 之中所有的值。
+
+下面的例子比较两个模板变量 user 和 currentuser :
+
+{% ifequal user currentuser %}
+    <h1>Welcome!</h1>
+{% endifequal %}
+和 {% if %} 类似， {% ifequal %} 支持可选的 {% else%} 标签：8
+
+{% ifequal section 'sitenews' %}
+    <h1>Site News</h1>
+{% else %}
+    <h1>No News Here</h1>
+{% endifequal %}
+注释标签
+Django 注释使用 {# #}。
+
+{# 这是一个注释 #}
+过滤器
+模板过滤器可以在变量被显示前修改它，过滤器使用管道字符，如下所示：
+
+{{ name|lower }}
+{{ name }} 变量被过滤器 lower 处理后，文档大写转换文本为小写。
+
+过滤管道可以被* 套接* ，既是说，一个过滤器管道的输出又可以作为下一个管道的输入：
+
+{{ my_list|first|upper }}
+以上实例将第一个元素并将其转化为大写。
+
+有些过滤器有参数。 过滤器的参数跟随冒号之后并且总是以双引号包含。 例如：
+
+{{ bio|truncatewords:"30" }}
+这个将显示变量 bio 的前30个词。
+
+其他过滤器：
+
+addslashes : 添加反斜杠到任何反斜杠、单引号或者双引号前面。
+date : 按指定的格式字符串参数格式化 date 或者 datetime 对象，实例：
+{{ pub_date|date:"F j, Y" }}
+length : 返回变量的长度。
+include 标签
+{% include %} 标签允许在模板中包含其它的模板的内容。
+
+下面这个例子都包含了 nav.html 模板：
+
+{% include "nav.html" %}
+
+（七）模板继承
+
+模板可以用继承的方式来实现复用。
+接下来我们先创建之前项目的 templates 目录中添加 base.html 、basees.html文件，代码如下：
+
+HelloWorld/templates/base.html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>base</title>
+</head>
+<body>
+    <h1>base</h1>
+    <p>Django 测试.</p>
+    {% block mainbody %}
+       <p>original</p>
+    {% endblock %}
+</body>
+</html>
+以上代码中，名为 mainbody 的 block 标签是可以被继承者们替换掉的部分。
+所有的 {% block %} 标签告诉模板引擎，子模板可以重载这些部分。
+basees.html 中继承 base.html，并替换特定 block，basees.html 修改后的代码如下：
+
+test/templates/basees.html 文件代码：
+{%extends "base.html" %}  //声明继承
+ 
+{% block mainbody %}
+<p>继承了 base.html 文件</p>
+{% endblock %}
+第一行代码说明 basees.html 继承了 base.html 文件。可以看到，这里相同名字的 
+block 标签用以替换 base.html 的相应 block。
+
+修改test/test/views.py、urls.py文件
+views.py
+.......
+def base(request3):
+    return render(request3,'base.html')
+
+def basees(request4):
+    return render(request4,'basees.html')
+
+urls.py
+urlpatterns = [
+    ......
+    url(r'base/',views.base),
+    url(r'basees',views.basees),
+]
+
+重新访问地址 
+http://localhost/base，输出结果:
+base
+Django测试.
+original
+
+http://localhost/basees，输出结果:
+base
+Django测试.
+继承了base.html文件
+
+（八）Django模型
+1、安装mysqlclient 插件
+
+安装pip3 install mysqlclient插件时报错
+ERROR: Command errored out with exit status 1: python setup.py egg_info 
+Check the logs for full command output.
+原因时：mysql依赖包没有安装
+解决方法：
+yum install -y mysql-devel 即可
+重新安装：pip3 install mysqlclient
+
+2、在项目的setting.py文件中找到DATABASES配置项，将其信息修改为：
+DATABASES = {
+	'default': {
+	      'ENGINE': 'django.db.backends.mysql',	#或者使用mysql.connector.django
+	       'NAME': 'test02',		#数据库的名字
+	       'USER': 'test',		#进入数据库的用户名
+	       'PASSWORD': '123456',	#数据库密码
+	       'HOST': 'localhost',	#数据库服务器的地址
+	       'PORT': '3306',		#端口
+	}
+}
+有中文注释，需要在setting.py文件头部添加#-*- coding:UTF-8 -*-
+上面包含数据库名称和用户的信息，他们与mysql中对应数据库和用户的设置相同，
+django会根据这一设置，与mysql中相应的数据库和用户连接起来。
+
+3、创建对应的数据库和用户、密码
+MariaDB [(none)]> create database test02;
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [(none)]> create database test02 character set utf8;
+Query OK, 1 row affected (0.00 sec)
+
+MariaDB [(none)]> grant all on test02.* to test@localhost identified by '123456';
+Query OK, 0 rows affected (0.17 sec)
+
+4、定义模型（创建APP）
+django规定，如果要使用模型，必须要创建一个app,使用django-admin startapp创建一个TestModel的app
+
+python3 /usr/local/python3/bin/django-admin startapp TestModel
+
+目录结构如下：
+test
+|-- TestModel
+|    |-- __init__.py
+|    |-- admin.py
+|    |-- models.py
+|    |-- tests.py
+|    `--views.py
+
+5、修改test02/TestModel/models.py文件
+from django.db imprort models
+
+class Test(models.Model):
+      name = models.CharFied(max_length=20)
+
+类名代表数据库表名，且继承了models.Model，类里面的字段代表数据库表中的字段（name），
+数据库类型则由CharField（相当于varchar）、DateField（相当于datetime），max_length参数限定长度
+
+6、在setting.py文件中找到INSTALLED_APSS 添加TestModel
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'TestModel',               # 添加此项
+)
+
+7、创建表结构
+在/test02/下执行以下命令
+python3 manage.py migrate	#创建表结构
+python3 manage.py makemigrations TestModel	#让django知道模型有一些变更
+python3 manage.py migrate TestModel	#创建表结构
+
+看到几行"Creating tables ...的反馈，代表数据库表创建成功
+...
+Creating table TestModel_test	#自定义的表
+
+表名组成结构为：应用名_类名（如：TestModel_test）
+注：尽管我们没有在models给表设置主键，但是django会自动添加一个id作为主键
+
+8、数据建库操作（增删改查）
+添加数据
+1、在test02/test02/下创建testdb.py文件
+添加数据需要先创建对象，然后再执行 save 函数，相当于SQL中的INSERT
+# -*- coding: utfc-8 -*-
+from django.http import HttpResponse
+from TestModel.models import Test
+
+def testdb(request):
+      test1 = Test(name = 'We Are The World!')	#添加的内容
+      test1.save()	#保存,save 函数，相当于SQL中的INSERT
+      return HttpResponse("<p>数据添加成功！</p>")
+
+2、在test02/test02/urls.py添加规则
+from django.conf.urls import *
+from . import views,testdb
+urlpatterns = [
+       ......
+       url(r'^hello$',views.hello),
+       url(r'^testdb$',testdb.testdb),
+]
+
+测试
+访问http://localhost:8080/testdb
+结果为：数据库添加成功
+进入test02数据库查看添加的数据
+mysql -utest -p123456
+>use test02;
+>select * from TestModel_test;
+
+查询数据
+1、在test02/test02/下创建testdb2.py文件
+# -*- coding: utf-8 -*-
+from django.http import HttpResponse
+from TestModel.models import Test
+
+def testdb2(request):
+#初始化
+    response = ""
+    response1 = ""
+
+#通过objects模型管理器的all()获取所有数据行，相当于SQL中的select * from
+    list = Test.objects.all()
+
+#filter相当于SQL中的where,可设置条件过滤结果
+    response2 = Test.objects.filter(id=1)
+
+#获取单个对象
+    response3 = Test.objects.get(id=1)
+
+#限制返回的数据相当于SQL中的offset 0 limit 2; limit后面跟的是2条数据，offset后面是从第1条开始读取
+    Test.objects.order_by('name')[0:2]
+
+#数据排序
+    Test.objects.order_by("id")
+
+#上面的方法可以连锁使用
+    Test.objects.filter(name="We Are The World!").order_by("id")
+
+#输出所有数据
+    for var in list:
+        response1 += var.name + " "
+    response = response1
+    return HttpResponse("<p>" +response + "</p>")
+
+2、在test02/test02/urls.py添加规则
+from django.conf.urls import *
+from . import views,testdb,testdb2
+urlpatterns = [
+       ......
+       url(r'^hello$',views.hello),
+       url(r'^testdb$',testdb.testdb),
+       url(r'^testdb2$',testdb2,testdb),
+]
+3、测试
+访问http://localhost:8080/testdb2
+返回结果为: We Are The Wrold!
+
+更新数据
+修改数据可以使用save()或update()
+
+1、在test02/test02/下创建testdb3.py文件
+# -*- coding: utf-8 -*-
+from django.http import HttpResponse
+from TestModel.models import Test
+
+def testdb3(request):
+#修改其中一个id=1的name字段，再save，相当于SQL中的update
+
+      test1 = Test.objects.get(id=1)
+      test1.name = 'Hello world!'
+      test.save()
+
+#另一种方式
+     #Test.objects.filter(id=1).update(name='Hello world!')
+
+#修改所有的列
+     #Test.objects.all().update(name='Hello world!')
+     return HttpResponse("<p>修改成功！</p>")
+
+2、在test02/test02/urls.py添加规则
+from django.conf.urls import *
+from . import views,testdb,testdb2,testdb3
+urlpatterns = [
+       ......
+       url(r'^hello$',views.hello),
+       url(r'^testdb$',testdb.testdb),
+       url(r'^testdb2$',testdb2,testdb),
+       url(r'^testdb3$',testdb3,testdb),
+]
+3、测试
+访问http://localhost:8080/testdb3
+返回结果为: 修改成功！
+访问http://localhost:8080/testdb2
+返回结果为: Hello world!
+
+删除数据
+删除数据库中的对象只需要调用该对象的delete()方法即可
+1、1、在test02/test02/下创建testdb4.py文件
+# -*- coding: utf-8 -*-
+from django.http import HttpResponse
+from TestModel.models import Test
+
+def testdb4(request):
+      # 删除id=1的数据
+    test1 = Test.objects.get(id=1)
+    test1.delete()
+    
+    # 另外一种方式
+    # Test.objects.filter(id=1).delete()
+    
+    # 删除所有数据
+    # Test.objects.all().delete()
+    
+    return HttpResponse("<p>删除成功!</p>")
+
+2、在test02/test02/urls.py添加规则
+from django.conf.urls import *
+from . import views,testdb,testdb2,testdb3,testdb4
+urlpatterns = [
+       ......
+       url(r'^hello$',views.hello),
+       url(r'^testdb$',testdb.testdb),
+       url(r'^testdb2$',testdb2,testdb),
+       url(r'^testdb3$',testdb3,testdb),
+       url(r'^testdb4$',testdb4,testdb),
+]
+3、测试
+访问http://localhost:8080/testdb4
+返回结果为: 删除成功！
+访问http://localhost:8080/testdb2
+返回结果为: 空
+
+	（九）django表单
+html表单是网站交互性的经典方式。介绍django对用户提交的表单数据进行处理。
+http协议以“请求--回复”的方式工作。客户发送请求时，可以在请求中附加数据。
+服务器通过解析请求，就可以获得客户传来的数据，并根据URL来提供特定的服务。
+
+
+
+
+
+
+
+
