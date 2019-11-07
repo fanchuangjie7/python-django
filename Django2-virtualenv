@@ -1,0 +1,522 @@
+python虚拟环境：创建一个文件夹，将python环境限制到这个文件夹中，安装模块等
+都是安装到了这个文件夹。
+
+为什么需要使用虚拟环境？
+隔离项目资源目录
+
+（一）windows Python虚拟环境
+
+1、安装virtualenv:
+virtualenv是用来创建虚拟环境的软件工具，我们可以通过pip或者pip3来安装
+pip install virtualenv
+pip3 install virtualenv
+
+2、创建虚拟环境：
+virtualenv 虚拟环境名字
+他只会在当前所在的目录下创建
+比如：
+C:\Users\win\Desktop>virtualenv test1-virtualenv  //在当前的目录下创建test1-virtualenv虚拟环境
+
+3、进入虚拟环境：
+windows系统进入虚拟环境：需要先进入test1-virtualenv/scripts/执行activate即可。
+
+4、退出虚拟环境：
+windows系统进入虚拟环境：需要先进入test1-virtualenv/scripts/执行deactivate即可。
+
+5、创建虚拟机环境时指定python解释器：
+virtualenv -p C:\Python36\python.exe virtualenv name
+
+6、安装virtualenvwrapper:（virtualenv的升级版）方便管理所创建的虚拟环境（推荐使用）
+linux系统安装方式：pip/pip3 install virtualenvwrapper
+windows系统安装方式：pip/pip3 install virtualenvwrapper-win
+
+7、virtualenvwrapper基本使用：
+创建虚拟环境：
+mkvirtualenv test02-vir 在当前登录的用户下创建一个envs目录，以后所有的虚拟环境都放在这目录下
+
+进入虚拟环境：workon （虚拟环境的名字）test02-vir
+退出虚拟环境：deactivate
+删除某个虚拟环境：rmvirtualenv （虚拟环境的名字）test02-vir
+列出所有虚拟环境：lsvirtualenv
+进入到虚拟环境所在的目录：cdvirtualenv
+
+8、修改mkvirtualenv的默认路径：
+修改环境变量：在系统变量中添加一个参数WORKON_HOME,将这个参数的值
+设置为你需要的路径
+变量名:WORKON_HOME
+变量值:D\Envs
+
+9、创建虚拟环境时指定python版本
+在使用mkvirtualenv时，可以指定--python的参数来指定具体的python路径：
+mkvirtualenv --python==C:\Python36\python.exe virtualenv name
+
+	（二）Django-准备前
+1、python3.6版本
+2、安装virtualenvwrapper,
+3、虚拟环境相关操作：
+创建虚拟环境：mkvirtualenv --python='[解释器所在的路径]'[虚拟环境名字]
+比如：mkvirtualenv --ptython='C:\python36\python3.6' django-env
+
+进入虚拟环境：workon [虚拟环境名字]
+退出虚拟环境：deactivate
+4、进入虚拟环境 workon 虚拟环境名字 ，然后在虚拟环境安装django==2.0
+5、安装pycharm专业版或sublime test3 其中一种。推荐使用pycharm专业版
+6、安装mysql，windows版的MySQL下载地址：
+https://dev.mysql.com/downloads/windows/installer/5.7.html
+其他系统版本下载MySQL地址：https://dev.mysql.com/downloads/mysql/
+7、安装pymysql，这个库是Python用来操作数据库的，没有他Django就不能操作数据库。
+安装方式：pip/pip3 install pymysql
+
+	（三）Django介绍
+
+1、django版本和python版本
+Django	python
+1.8	2.7、3.2、3.3、3.4、3.5
+1.9、1.0	2.7、3.4、3.5
+1.11	2.7、3.4、3.5、3.6
+2.0	3.4、3.5、3.6
+2.1	3.5、3.6、3.7
+
+2、web服务器和应用服务器以及web应用框架：
+web服务器：负责处理http请求，响应静态文件，常见的有Apache、Nginx以及微软的IIS
+
+应用服务器：负责处理逻辑的服务器，比如php、python的代码，是不能直接通过nginx这种web服务器
+来处理的，只能通过应用服务器来处理，常见的应用服务器有uwsgi、tomcat等。
+
+web应用框架：一般用某种语言，封装了常用的web功能的框架就是web应用框架，flask、django以及
+java中的SSH(Structs+Spring3+Hibernate3)框架都是web应用框架。
+
+3、Django和MVC：
+django是一个遵循MVC设计模式的框架，MVC是Model、View、Controller的三个单词的简写。
+分别代表：模型、视图、控制器。
+
+4、Django文档
+Django的官网：https://www.djangoproject.com
+Django Book 2.0版本的中文文档：http://djangobook.py3k.cn/2.0/chapter01
+Django 2.0版本的中文文档：http://python.usyiyi.cn/translate/django2/index.html
+
+
+		（四）第一个django项目
+第一种创建Django项目方式
+1、创建项目：
+通过命令行的方式：要先进入到安装了Django的虚拟环境中，然后执行命令：
+django-admin startproject [项目名称]
+这样就可以在当前目录下创建一个项目了
+
+2、运行项目：
+在终端，进入到项目文件夹中，然后执行以下命令即可运行：
+python manage.py runserver
+
+3、指定端口运行：python manage.py runserver 9000
+允许其他主机来访问此项目：python manage.py runserver 0.0.0.0 9000
+
+第二种创建Django项目的方式
+1、使用pychram创建
+文件->新建项目->选择Django，然后指定项目所在的路径，以及python解释器，再点击create就可以
+创建项目了
+
+2、运行项目
+点击右上角的绿色三角按钮
+注意：用pychram运行项目，要避免一个项目运行多次。
+在项目配置中，把只用单一实例（single instance only）选项勾选上，避免以上的问题。
+
+3、指定端口运行：
+点击项目配置中有个修改端口（port）运行，修改即可 
+允许其他主机来访问此项目：点击项目配置中有个修改host地址（host）0.0.0.0
+在settings.py文件中，配置ALLOWED_HOSTS，将本机的ip地址添加进去
+如：ALLOWED_HOSTS = ['IP地址']
+
+	项目结构介绍：
+manage.py：以后和项目交互基本上都是基于这个文件，一般都是在终端输入 python manage.py [子命令]
+可以输入 python manage.py help 看下能做什么事情，除非自己需要做什么才能修改此文件。
+
+settings.py：本项目的设置项，以后所有和项目相关的配置都是放在这个文件里。
+
+urls.py：用来与视图函数映射的，以后来了一个请求，就会从这个文件夹中找到匹配的视图函数。
+wsgi.py：项目与WSGI协议兼容的web服务器入口，部署的时候需要用到的，一般情况也是不需要修改的。
+
+	project和app的关系：
+app是django项目的组成部分，一个app代表项目中的一个模块，所有URL请求的响应都是由app来处理，
+比如豆瓣里有图书、电影、音乐、同城等许许多多的模块，如果站在django的角度来看，这些模块就是
+app，这些app共同组成豆瓣这个项目，因此这里要有一个概念，django项目有许多app组成，一个app
+可以被用到其他项目，django也能用有不同的app。
+
+	django推荐的项目规范
+按照功能或者模块进行分层，分成一个个app，所有和某个模块相关的视图都写在对应的app的views.py中，
+并且模型和其他的也是类似，然后django已经提供了一个比较方便创建app的命令：
+python manage.py startapp [app名称]
+
+	DEBUG模式：
+1、如果开启了debug模式，那么以后我们修改了django项目的代码，然后按下ctrl+s，那么django就会自动
+的给我们重启项目，不需要手动重启。
+2、如果开启了debug模式，那么以后django项目中的代码出现bug了，那么在浏览器中和控制台会打印出错信息。
+3、在生产环境中，禁止开启debug模式，不然会有安全隐患。
+4、如果将debug设置为false，那么必须要设置ALLOWED_HOSTS
+
+ALLOWED_HOSTS：
+这个变量是用来设置以后别人只能通过这个变量中的ip地址或者域名来进行访问。
+	
+	URL分发器
+视图：
+视图一般都写在app的views.py中，并且视图的第一个参数永远都是request（一个HttpRequest）对象。这个对象
+存储了请求过来的所有信息，包括携带的参数以及一些头部信息等，在视图中，一般是完成逻辑相关的操作，比如
+这个请求是添加一篇博客，那么可以通过request来接收到这些数据，然后存储到数据库中，最后再把执行的结果
+返回给浏览器，视图函数的返回结果必须是HttpResponse对象或者子类的对象。
+比如：
+from django.http import HttpResponse
+def book_list(request):
+      return HttpResponse("书籍列表")
+总结：
+1、视图函数的第一个参数必须是request,这个参数绝对不能少。
+2、视图函数的返回值必须是 django.http.response.HttpResponBase的子类的对象。
+
+	URL映射
+视图写完后，要与URL进行映射，也即用户在浏览器中输入什么url的时候可以请求这个视图函数，
+在用户输入了某个url，请求到我们的网站的时候，django会从项目urls.py文件中寻找对应的视图，
+在urls.py文件中有一个urlpatterns变量，以后django就会从这个变中读取所有的匹配规则，匹配
+规则需要使用django.urls.path函数进行包裹，这个函数会根据传入的参数返回URLPattern或者
+是URLResolver的对象。
+比如：
+from django.contrib import admin
+from django.urls import path
+from book import views
+urlpatterns  = [
+	path('admin/',admin.site.urls),
+	path('book/',views.book_list)
+]
+1、为什么会去urls.py文件中寻找映射？
+是因为在settings.py文件中配置了ROOT_URLCONF为urls.py，所有django会去urls.py寻找。
+
+2、在urls.py中我们所有的映射，都应该放在urlpatterns这个变量中
+3、所有的映射不是随便写的，而是使用path函数或者是re_path函数进行包装的。
+
+	URL传参数：
+1、采用在url中使用变量的方式：
+在path的第一个函数中，使用<参数名>的方式可以传递参数，然后在视图函数中也要
+写一个参数，视图函数中的参数必须和url中的参数名称保持一致，不然会找不到这个
+参数，另外，url中可以传递多个参数。
+
+2、采用查询字符串的方式：
+在url中，不需要单独的匹配查询字符串的部分，只需要在视图函数中使用request.GET.get(参数名)
+的方式来获取，比如：
+def author_detail(request):
+	author_id = request.GET['id']
+	text = '作者的id是:%s % author_id
+	return HttpResonse(text)
+因为查询字符串使用的是GET请求，所以我们通过request.GET来获取参数，并且因为
+GET，是一个类似于字典的数据类型，所有获取值跟字典的方式都是一样的。
+
+	URL中添加参数：
+有时候，url中包含了一些参数需要动态调整，比如简书某篇文章的详情页的url，是
+https://www.jianshu.com/p/a5aab9c4978e,后面的a5aab9c4978e就是这篇文章的id，
+那么简书的文章详情页面的url就可以写成https://www.jianshu.com/p/<id>,其中id
+就是文章的id，那么如何在django中实现这种需求？这时候我们可以在path函数中，
+使用尖括号的形式来定义一个参数，比如我现在想要获取一本书籍的详细信息，那么
+应该在url中指定这个参数。
+比如：
+from django.contrib import admin
+from django.urls import path
+from book import views
+urlpatterns = [
+	path('admin/',admin.site.urls),
+	path('book/',views.book_list),
+path('book/<book_id>/',views.book_datail)
+]
+
+而views.py中的代码如下：
+def book_detail(request,book_id):
+	text = "您输入的书籍的id是:%s" % book_id
+	return HttpReonse(text)
+
+当然，也通过查询字符串的方式传递一个参数过去，
+比如：
+urlpatterns = [
+	path('admin/',admin.site.urls),
+	path('book/',views.book_list),
+	path('book/detail/',views.book_detail)
+]
+
+在views.py中代码如下：
+def book_detail(request):
+	book_id = request.GET.get("id)
+	text = "您输入的书籍id是: %s" % book_id
+	return HttpResponse(text)
+以后在访问的时候就是通过 /book/detail/?id=1即可将参数传递过去。
+
+	url模块化：
+在我们的项目中，不可能只有一个app，如果把所有的app的views中的视图都放
+在urls.py中进行映射，肯定会让代码显得非常乱，因此django给我们提供了一
+个方法，可以在app内部包含自己的url匹配规则，而在项目的urls.py中再统一
+包含这个app的urls，使用这个技术需要借助include函数。
+
+include函数:
+如果项目变得越来越大，那么url会变得越来越多，如果都放在主urls.py文件中，
+那么将不太好管理，因此我们可以将每个app自己的urls放到自己的app中进行管理，
+一般我们会在app中新建一个urls.py文件用来存储所有和这个app相关的子url.
+
+需要注意的地方:
+1、应该使用include函数包括子urls.py,并且这个urls.py的路径是相对于项目的路径。
+
+比如：urls.py文件
+from django.contrib import admin
+from django.urls import path,include
+urlpatterns = [
+	path('admin/',admin.site.urls),
+	path('book/',include("book.urls"))
+]
+
+在urls.py文件中把所有的和book这个app相关的url都移动到app/urls.py中了，
+然后在project/urls.py中，通过include函数包含book.urls，以后在请求book
+相关的url的时候都需要加一个book的前缀。
+# book/urls.py文件：
+from django.urls import path
+from . import views
+urlpatterns = [
+	path('list/',views.book_list),
+	path('detail/<book_id>/',views.book_detail)
+]
+
+以后访问书的列表的url的时候，就通过/book/list/访问，访问书籍详情页面的url
+的时候就通过book/detail/<id>来访问。
+
+2、在app的urls.py中，所有的url匹配也要放在一个叫做urlpatterns的变量中，否则找不到。
+
+3、url是会根据主urls.py和app中的urls.py进行拼接的，因此注意不要多加斜杠。
+
+path函数:
+path函数的定义为：path(route,view,name=None,kwargs=None),以下对这几个参数进行详细说明。
+
+1、route参数：url的匹配规则。这个参数中可以指定url中需要传递的参数，比如在访问文章详情
+页时，可以传递一个id，传递参数是通过<>尖括号来进行指定的，并且在传递参数时，可以指定
+这个参数的数据类型，比如文章的id都是int类型，那么可以这样写<int:id>,以后匹配的时候，
+就只会匹配到id为int类型的url，而不会匹配其他的url，并且在视图函数中获取这个参数时，
+就已经被转换成一个Int类型了，其中还有几种常用的类型:
+
+str:非空的字符串类型，默认的转换器，但是不能包含斜杠。
+
+int:匹配任意的零或者正数的整形，到视图函数中就是一个Int类型。
+
+slug:由英文中的横杠 - ，或者下划线_连接英文字符或者数字而成的字符串。
+
+uuid:匹配uuid字符串。
+
+path:匹配非空的英文字符串，可以包括斜杠。
+
+2、view参数:可以为一个视图函数或者是类视图.as_view()或者是django.urls.include()函数的返回值。
+
+3、name参数:这个参数是给这个url取个名字的，这在项目比较大，url比较多的时候用处很大。
+
+4、kwargs参数:有时候想给视图函数传递一些额外的参数，就可以通过kwargs参数进行传递，这个
+参数接收一个字典，传到视图函数中的时候，会作为一个关键字参数传过去，比如以下的url规则：
+from django.urls import path 
+from . import views
+urlpatterns = [
+	path('blog/<int:year>/',views.year_arcive,{'foo':'bar'}),
+]
+
+那么以后再访问blog/1991/这个url时，会将foo=bar作为关键字参数传给year_archive函数。
+
+5、re_path函数:
+有时候我们在写url匹配的时候，想要写使用正则表达式来实现一些复杂的需求，那么这时候
+我们可以使用re_path来实现，re_path的参数和path参数一模一样，只不过第一个参数也就是route
+参数可以作为一个正则表达式。一些使用re_path的实例代码如下:
+
+from django.urls import path, re_path
+from . import views
+    urlpatterns = [
+        path('articles/2003/', views.special_case_2003),
+        re_path(r'articles/(?P<year>[0-9]{4})/', views.year_archive),
+        re_path(r'articles/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', views.month_archive)
+]
+
+以上例子中我们可以看到，所有的route字符串前面都加了一个r，表示这个字符串是一个原生字符串，
+在写正则表达式中是推荐使用原生字符串的，这样可以避免在python这一层面进行转义，而且
+使用正则表达式捕获参数时，是一个圆括号进行包裹，然后这个参数名是通过尖括号<year>进行包裹，
+之后才是写正则表达式的语法。
+
+	url命名与反转url:
+# 为什么需要url命名？
+因为url是经常变化的，如果在代码中写死可能会经常改代码，给url取个名字，以后使用url时就可以
+使用它的名字进行反转就可以了，就不需要写死url了。
+
+# 如何给一个url指定名称？
+在path函数中，传递一个name参数就可以指定，比如:
+from django.urls import path
+from -. import views
+urlpatterns = [
+	path('',views.index,name='index),
+	path('login/',views.login,name='login')
+]
+
+# 应用命名空间？
+在多个app之间，有可能产生同名的url，这时候为了避免反转url的时候产生混淆，可以使用命名空间
+来做区分。定义应用命名空间非常简单，只要在app的urls.py中定义一个叫做app_name的变量，来指定
+这个应用的命名空间。比如:
+app_name = 'front'
+urlpatterns = [ 
+	path('',views.index,name='index'),
+	path('login/',views.login,name='login')
+]
+以后在做反转时就可以使用应用命名空间:url名称的方式进行反转。比如:
+login_url = reverse('front:login')
+
+# 应用命名空间和实例命名空间: 
+一个app可以创建多个实例，可以使用多个url映射同一个app，所以这就产生一个问题，以后在反转时，
+如果使用应用命名空间，那么就会发生混淆，为了避免这个问题，我们可以使用实例命名空间，
+实例命名空间也是非常简单，只要在include函数中传递一个namespace变量即可，比如:
+urlpatterns = [
+	path('cms1/',include('cms.urls',namespace='cms1')),
+	path('cms1/',include('cms.urls',namespace='cms1')),
+]
+以后在做反转时，就可以根据实例命名空间来指定具体的url,比如:
+def index(request):
+	username = request.GET.get('username')
+	if  username:
+		return HttpResponse('CMS首页')
+	else:
+	#获取当前的命名空间
+	current_namespace = request.resolver_match.namespace
+	return redirect(reverse("%s:login"%current_namespace))
+
+include函数详解:
+1、include(module,namespace=None):
+	* module:子url的模块字符串
+	* namespace:实例命名空间，这个地方需要注意一点，如果指定实例命名空间，那么
+	  前提必须要先指定应用命名空间，也就是在urls.py中添加app_name变量。
+2、include((pattern_list,app_namespace),namespace=None):include函数的第一个参数既可以
+为一个字符串，也可以一个元组，如果是元组，那么元组的第一个参数是子urls.py模块的字符串，
+元组的第二个参数是应用命名空间，也就是说，应用命名空间既可以在子urls.py中通过app_name
+指定，也可以在include(pattern_list):pattern_list是一个列表，这个列表中装的是path或者
+re_path函数。比如:
+path('movie/',include([path('',views.movie),path('list/',views.movie_list),]))
+
+re_path函数详解:
+1、re_path函数和path函数的作用都是一样的，只不过re_path函数是在写url的时候可以用正则表达式，
+功能更加强大。
+
+2、写正则表达式都推荐使用原生字符串，也就是以r开头的字符串。
+
+3、在正则表达式中定义变量，需要使用圆括号括起来，这个参数是有名字的，那么需要使用?p<参数的名字>
+然后在后面添加正则表达式的规则，比如:
+from django.urls import re_path
+from . import views
+urlpatterns = [
+	# r:代表的是原生字符串(raw)
+	re_path(r'^$',views.article),
+	# /article/list/<year>/
+	re_path(r"^list/(?P<year>\d{4}/$",views.article_list),
+	re_path(r"^list/(?P<month>\d{2}/$",views.article_list_month)
+]
+4、如果不是特别要求，直接使用path就够了，省的把代码搞得很麻烦（因为正则表达式其实是非常晦涩的，
+特别是一些比较复杂的正则，今天写的明天可能就不记得了），除非是url中确实是需要使用正则来解决
+才使用re_path.
+
+reverse函数补充:
+1、如果在反转url的时候，需要添加参数，那么可以传递kwargs参数到revers函数中，比如:
+detail_url = reverse('datail',kwargs={"article_id":1'page':2})
+
+2、如果想要添加查询字符串的参数，则必须手动的进行拼接，比如:
+login_url = reverse('login')+"?next=/"
+
+自定义URL（path）转换器:
+# 需求
+实现一个获取文章列表的demo，用户可以根据/articles/文章分类/的方式来获取文章，其中文章分类
+采用的是 分类1+分类2+分类3 的方式拼接的，并且如果只有一个分类，那就不需要加号，比如:
+1、第一种:获取python分类下的文章
+/articles/python/
+
+2、第二种：获取python和Django分类下的文章
+/articles/python+django/
+
+3、第三种：获取python和Django和flask分类下的文章
+/articles/python+django+flask/
+以此类推
+
+在文章分类参数传到视图函数之前要把这些分类分开来存储到列表中。
+比如参数是python+django，那么传到视图函数的时候就要变成['python','django']
+
+以后在使用reverse反转的时候，限制传递文章分类的参数应该是一个列表，并且要
+将这个列表变成python+django的形式。
+
+自定义Url转换器按照以下五个步骤来走就可以了:
+1、定义一个分类，直接继承自object就可以了。
+2、在类中定义一个属性regex，这个属性是用来限制url转换器的正则表达式。
+3、实现to_python(self,value)方法，这个方法是将url中的值转换一下，然后传给视图函数的。
+4、实现to_url(self,value)方法，这个方法是在做url反转的时候，将传进来的参数转换后拼接
+成一个正确的url。
+5、将定义好的转换器，使用django.urls.converters.register_converter方法注册到django中。
+代码如下:
+from django.urls import register_converter
+
+class CategoryConverter(object):
+	# \w表示0~9、a~z、A~Z、
+	# \w+ 表示多个组成
+	regex = r'\w+(\w+\+\w)+'
+	def to_python(self,value):
+		result = value.split("+)	#拼接符号为+	
+		return result
+	def to_url(self,value):
+		if isinstance(value,list):
+			result = "+".join(value)
+			return result
+		else:
+			raise RuntimeError("转换url时，分类参数必须为列表！")
+register_converter(CategoryConverter,'cate')
+
+URL映射时指定默认参数:
+使用path或者是re_path的后，在route中都可以包含参数，而有时候想指定默认的参数
+这时候可以通过以下方式来完成，比如:
+from django.urls import path
+from . import views
+urlpatterns = [
+	path('blog/',views.page),
+	path(.blog/page<int:num>/',views.page),
+]
+
+#view (in blog/views.py)
+def page(request,num=1):
+	# output the appropriate page of blog entries,according to num.
+当在访问bolg/的时候，因为没有传递num参数，所以会匹配到第一个url，这时候就执行view.page
+这个视图函数，而在page函数中，又有num=1这个默认参数，因此这时候就可以不用传递参数。
+而如果访问blog/1的时候，因为在传递参数的时候传递了num，因此会匹配到第二个url，这时候
+也执行views.page,然后把传递进来的参数传给page函数中的num.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
